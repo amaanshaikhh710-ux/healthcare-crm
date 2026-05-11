@@ -239,7 +239,7 @@ def table_columns(table_name, cursor=None, refresh=False):
             own_cursor = own_conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             cursor = own_cursor
         cursor.execute(""" SELECT column_name FROM information_schema.columns WHERE table_name = %s """, (table_name,))
-        cols = {row['Field'] for row in cursor.fetchall()}
+        cols = {row['column_name'] for row in cursor.fetchall()}
         SCHEMA_CACHE[cache_key] = cols
         return cols
     except Exception:
