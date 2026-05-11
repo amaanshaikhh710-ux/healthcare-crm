@@ -167,6 +167,11 @@ CREATE TABLE IF NOT EXISTS users (
 )
 """)
 cursor.execute("""
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS name VARCHAR(255)
+""")
+    
+cursor.execute("""
 INSERT INTO users (name,email, password)
 VALUES ('Admin','admin@gmail.com', 'Amaan@123')
 ON CONFLICT (email) DO NOTHING
