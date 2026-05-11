@@ -238,7 +238,7 @@ def table_columns(table_name, cursor=None, refresh=False):
             own_conn = get_db_connection()
             own_cursor = own_conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             cursor = own_cursor
-        cursor.execute(f"SHOW COLUMNS FROM {table_name}")
+        cursor.execute(""" SELECT column_name FROM information_schema.columns WHERE table_name = %s """, (table_name,))
         cols = {row['Field'] for row in cursor.fetchall()}
         SCHEMA_CACHE[cache_key] = cols
         return cols
