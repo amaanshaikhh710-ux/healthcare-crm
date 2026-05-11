@@ -6,8 +6,8 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash, send_file, Response
 import os
 from functools import wraps
-import mysql.connector
-from mysql.connector import Error, IntegrityError
+import psycopg2
+from psycopg2 import Error, IntegrityError
 import io
 import json
 from datetime import datetime, date, timedelta
@@ -145,12 +145,13 @@ def inject_user():
 # ------------------
 def get_db_connection():
     try:
-        return mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="Amaan@123",
-            database="healthcare_crm"
-        )
+       return psycopg2.connect(
+    host=os.getenv("DB_HOST"),
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD"),
+    database=os.getenv("DB_NAME"),
+    port=int(os.getenv("DB_PORT", 3306))
+)
     except Error:
         raise
 
