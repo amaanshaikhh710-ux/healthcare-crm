@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Appointments - LeadFlow{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-slate-900">Appointments</h1>
+    <p class="text-slate-600 mt-1">Schedule and manage patient appointments</p>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="mb-4">
+      {% for category, message in messages %}
+        <div class="p-3 rounded-lg {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="flex gap-4 mb-6">
+    <input type="text" placeholder="Search appointments..." class="px-4 py-2 border rounded-lg w-full" />
+    <a href="{{ url_for('leads') }}" class="bg-slate-200 hover:bg-slate-300 text-slate-900 px-4 py-2 rounded-lg font-medium">← Back to Leads</a>
+</div>
+
+<div class="bg-white rounded-2xl shadow p-4 overflow-x-auto">
+    <table class="w-full text-sm">
+        <thead class="text-slate-500 text-left border-b">
+            <tr>
+                <th class="py-3">ID</th>
+                <th class="py-3">Patient Name</th>
+                <th class="py-3">Doctor Name</th>
+                <th class="py-3">Service</th>
+                <th class="py-3">Date</th>
+                <th class="py-3">Time</th>
+                <th class="py-3">Status</th>
+                <th class="py-3">Notes</th>
+                <th class="py-3">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if appointments %}
+                {% for appt in appointments %}
+                <tr class="border-b hover:bg-slate-50">
+                    <td class="py-3 font-medium">#{{ appt.appointment_id }}</td>
+                    <td class="py-3">{{ appt.patient_name or '-' }}</td>
+                    <td class="py-3">{{ appt.doctor_name or '-' }}</td>
+                    <td class="py-3">{{ appt.service or '-' }}</td>
+                    <td class="py-3">
+                        {% if appt.appointment_date %}
+                            {% if appt.appointment_date is string %}
+                                {{ appt.appointment_date }}
+                            {% else %}
+                                {{ appt.appointment_date.strftime('%Y-%m-%d') }}
+                            {% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="py-3">
+                        {% if appt.appointment_time %}
+                            {{ appt.appointment_time }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="py-3">
+                        <span class="px-2 py-1 rounded text-xs font-semibold {% if appt.status == 'SCHEDULED' %}bg-blue-100 text-blue-800{% elif appt.status == 'COMPLETED' %}bg-green-100 text-green-800{% elif appt.status == 'CANCELLED' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ appt.status }}
+                        </span>
+                    </td>
+                    <td class="py-3 text-slate-600 truncate max-w-xs">
+                        {{ appt.notes or '-' }}
+                    </td>
+                    <td class="py-3 flex gap-2">
+                        {% if appt.status == 'SCHEDULED' %}
+                            <form method="POST" action="{{ url_for('update_appointment_status', appointment_id=appt.appointment_id, new_status='COMPLETED') }}" style="display:inline;">
+                                <button type="submit" class="text-xs bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded" onclick="return confirm('Mark as completed?')">✓ Done</button>
+                            </form>
+                        {% endif %}
+                        
+                        {% if appt.status == 'COMPLETED' and not appt.invoice_exists %}
+                            <form method="POST" action="{{ url_for('generate_invoice', appointment_id=appt.appointment_id) }}" style="display:inline;">
+                                <button type="submit" class="text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" title="Generate invoice for this appointment" onclick="return confirm('Generate invoice for this appointment?')">💰 Invoice</button>
+                            </form>
+                        {% endif %}
+                        
+                        {% if appt.status == 'COMPLETED' and appt.invoice_exists %}
+                            <span class="text-xs bg-gray-300 text-gray-700 px-2 py-1 rounded inline-block" title="Invoice already created">✓ Invoice</span>
+                        {% endif %}
+                        
+                        {% if appt.status == 'COMPLETED' %}
+                            <a href="{{ url_for('add_followup', appointment_id=appt.appointment_id) }}" class="text-xs bg-purple-500 hover:bg-purple-600 text-white px-2 py-1 rounded" title="Schedule a follow-up for this appointment">📋 Follow-Up</a>
+                        {% endif %}
+                        
+                        {% if appt.status != 'CANCELLED' %}
+                            <form method="POST" action="{{ url_for('update_appointment_status', appointment_id=appt.appointment_id, new_status='CANCELLED') }}" style="display:inline;">
+                                <button type="submit" class="text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded" onclick="return confirm('Cancel appointment?')">✕ Cancel</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="9" class="py-6 text-center text-slate-500">
+                        No appointments found. <a href="{{ url_for('leads') }}" class="text-blue-600 hover:underline">Create one from a converted lead</a>
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-4 text-sm text-slate-600">
+    <p>Total appointments: <strong>{{ appointments|length }}</strong></p>
+</div>
+{% endblock %}

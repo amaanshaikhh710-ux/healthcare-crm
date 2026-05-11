@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Follow-Ups - LeadFlow CRM{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-semibold text-slate-900">Follow-Up Insights</h1>
+            <p class="text-sm text-slate-600 mt-1">Stay on top of pending items and ensure no cases fall through the cracks.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div class="glass-card rounded-2xl p-6">
+            <p class="text-sm font-semibold text-slate-500">Pending Follow-Ups</p>
+            <p class="text-3xl font-bold text-slate-900 mt-4">{{ stats.pending }}</p>
+            <p class="text-xs text-slate-500 mt-2">Items still waiting for action.</p>
+        </div>
+        <div class="glass-card rounded-2xl p-6">
+            <p class="text-sm font-semibold text-slate-500">Overdue (> 15 days)</p>
+            <p class="text-3xl font-bold text-slate-900 mt-4">{{ stats.overdue }}</p>
+            <p class="text-xs text-slate-500 mt-2">Need immediate follow-up.</p>
+        </div>
+        <div class="glass-card rounded-2xl p-6">
+            <p class="text-sm font-semibold text-slate-500">Completed</p>
+            <p class="text-3xl font-bold text-slate-900 mt-4">{{ stats.completed }}</p>
+            <p class="text-xs text-slate-500 mt-2">Successfully closed follow-ups.</p>
+        </div>
+        <div class="glass-card rounded-2xl p-6">
+            <p class="text-sm font-semibold text-slate-500">Completion Rate</p>
+            <p class="text-3xl font-bold text-slate-900 mt-4">{{ stats.completion_rate }}%</p>
+            <p class="text-xs text-slate-500 mt-2">% of follow-ups marked complete.</p>
+        </div>
+    </div>
+
+    <div class="glass-card rounded-2xl p-6">
+        <h3 class="text-lg font-semibold text-slate-900">Recent Follow-Up Activity</h3>
+        <p class="text-sm text-slate-600 mt-1">Review the most recent follow-up actions across patients and doctors.</p>
+
+        <div class="mt-6 overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-600">
+                <thead class="bg-white/70 text-slate-800">
+                    <tr>
+                        <th class="px-4 py-3">Date</th>
+                        <th class="px-4 py-3">Patient</th>
+                        <th class="px-4 py-3">Doctor</th>
+                        <th class="px-4 py-3">Status</th>
+                        <th class="px-4 py-3">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in timeline %}
+                    <tr class="border-b border-slate-200 hover:bg-slate-50">
+                        <td class="px-4 py-3 font-medium text-slate-800">{{ f.followup_date or '-' }}</td>
+                        <td class="px-4 py-3">{{ f.patient_name or 'Unknown' }}</td>
+                        <td class="px-4 py-3">{{ f.doctor_name or 'Unknown' }}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold {% if f.status == 'DONE' %}bg-emerald-100 text-emerald-700{% elif f.status == 'PENDING' %}bg-amber-100 text-amber-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ f.status }}</span>
+                        </td>
+                        <td class="px-4 py-3">{{ f.notes or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if timeline|length == 0 %}
+                    <tr>
+                        <td class="px-4 py-4 text-center text-sm text-slate-500" colspan="5">No follow-up activity available.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+
+{% block title %}Invoices - LeadFlow{% endblock %}
+
+{% block page_title %}Invoices & Payment Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h2 class="text-3xl font-bold text-slate-900">Invoices</h2>
+            <p class="text-sm text-slate-500 mt-1">Professional invoicing and payment management</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-600 text-sm font-medium">Total Revenue</p>
+                    <p class="text-2xl font-bold text-slate-900 mt-2">Rs. {{ "{:,.2f}".format(revenue_summary.get('total_revenue', 0)) }}</p>
+                </div>
+                <div class="text-3xl text-blue-100">Revenue</div>
+            </div>
+            <p class="text-xs text-slate-500 mt-3">{{ revenue_summary.get('paid_count', 0) }} paid invoice{{ 's' if revenue_summary.get('paid_count', 0) != 1 else '' }}</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-600 text-sm font-medium">Paid Revenue</p>
+                    <p class="text-2xl font-bold text-green-600 mt-2">Rs. {{ "{:,.2f}".format(revenue_summary.get('paid_revenue', 0)) }}</p>
+                </div>
+                <div class="text-3xl text-green-100">Paid</div>
+            </div>
+            <p class="text-xs text-slate-500 mt-3">Realized income</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-amber-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-600 text-sm font-medium">Pending Amount</p>
+                    <p class="text-2xl font-bold text-amber-600 mt-2">Rs. {{ "{:,.2f}".format(revenue_summary.get('pending_revenue', 0)) }}</p>
+                </div>
+                <div class="text-3xl text-amber-100">Pending</div>
+            </div>
+            <p class="text-xs text-slate-500 mt-3">Awaiting payment</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-600 text-sm font-medium">This Month</p>
+                    <p class="text-2xl font-bold text-purple-600 mt-2">Rs. {{ "{:,.2f}".format(revenue_summary.get('this_month_revenue', 0)) }}</p>
+                </div>
+                <div class="text-3xl text-purple-100">Month</div>
+            </div>
+            <p class="text-xs text-slate-500 mt-3">Current month total</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="flex flex-wrap gap-2 mb-4">
+            <a href="{{ invoice_type_links.all }}" class="px-4 py-2 rounded-lg text-sm font-medium transition {% if not invoice_type_filter %}bg-slate-900 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">All</a>
+            <a href="{{ invoice_type_links.appointment }}" class="px-4 py-2 rounded-lg text-sm font-medium transition {% if invoice_type_filter == 'APPOINTMENT' %}bg-blue-600 text-white{% else %}bg-blue-100 text-blue-700 hover:bg-blue-200{% endif %}">Treatment</a>
+            <a href="{{ invoice_type_links.followup }}" class="px-4 py-2 rounded-lg text-sm font-medium transition {% if invoice_type_filter == 'FOLLOWUP' %}bg-green-600 text-white{% else %}bg-green-100 text-green-700 hover:bg-green-200{% endif %}">Follow-up</a>
+        </div>
+
+        <form method="GET" action="{{ url_for('invoices') }}" class="space-y-4 md:space-y-0 md:flex md:items-end md:gap-3">
+            <div class="flex-1">
+                <label class="block text-sm font-medium text-slate-700 mb-1">Search</label>
+                <input type="text" name="search" placeholder="Invoice #, Patient, Doctor, Service..." value="{{ request.args.get('search', '') }}" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+            </div>
+
+            {% if user_role in ['ADMIN', 'STAFF'] and doctors %}
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Doctor</label>
+                <select name="doctor" class="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                    <option value="">All Doctors</option>
+                    {% for doctor in doctors %}
+                    <option value="{{ doctor.doctor_id }}" {% if request.args.get('doctor')|int == doctor.doctor_id %}selected{% endif %}>{{ doctor.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Status</label>
+                <select name="status" class="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                    <option value="">All Status</option>
+                    <option value="PAID" {% if request.args.get('status') == 'PAID' %}selected{% endif %}>Paid</option>
+                    <option value="UNPAID" {% if request.args.get('status') == 'UNPAID' %}selected{% endif %}>Unpaid</option>
+                </select>
+            </div>
+
+            <input type="hidden" name="type" value="{{ invoice_type_filter }}">
+
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">Filter</button>
+            <a href="{{ url_for('invoices') }}" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition text-sm font-medium">Reset</a>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b bg-slate-50">
+                        <th class="px-4 py-3 text-left font-semibold text-slate-700">Invoice #</th>
+                        <th class="px-4 py-3 text-left font-semibold text-slate-700">Patient</th>
+                        <th class="px-4 py-3 text-left font-semibold text-slate-700">Doctor</th>
+                        <th class="px-4 py-3 text-left font-semibold text-slate-700">Type</th>
+                        <th class="px-4 py-3 text-left font-semibold text-slate-700">Service</th>
+                        <th class="px-4 py-3 text-right font-semibold text-slate-700">Amount</th>
+                        <th class="px-4 py-3 text-right font-semibold text-slate-700">Tax</th>
+                        <th class="px-4 py-3 text-right font-semibold text-slate-700">Total</th>
+                        <th class="px-4 py-3 text-right font-semibold text-slate-700">Paid</th>
+                        <th class="px-4 py-3 text-right font-semibold text-slate-700">Balance</th>
+                        <th class="px-4 py-3 text-center font-semibold text-slate-700">Status</th>
+                        <th class="px-4 py-3 text-left font-semibold text-slate-700">Date</th>
+                        <th class="px-4 py-3 text-center font-semibold text-slate-700">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for invoice in invoices %}
+                    <tr class="hover:bg-slate-50 transition table-hover-row {{ invoice.invoice_card_class }}">
+                        <td class="px-4 py-3">
+                            <span class="font-mono font-semibold text-blue-600">{{ invoice.invoice_number or 'INV-' + invoice.invoice_id|string }}</span>
+                        </td>
+                        <td class="px-4 py-3 text-slate-900">{{ invoice.patient_name or '—' }}</td>
+                        <td class="px-4 py-3 text-slate-900">{{ invoice.doctor_name or '—' }}</td>
+                        <td class="px-4 py-3 text-slate-700">
+                            <div class="space-y-2">
+                                <span class="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs font-semibold {{ invoice.invoice_badge_class }}">
+                                    {% if invoice.invoice_type == 'FOLLOWUP' %}
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M5.64 18.36A9 9 0 1020 12"></path>
+                                    </svg>
+                                    {% else %}
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a4 4 0 00-5.656-5.656L12 11.544 10.228 9.77a4 4 0 10-5.656 5.657L12 22.856l7.428-7.428z"></path>
+                                    </svg>
+                                    {% endif %}
+                                    {{ invoice.invoice_label }}
+                                </span>
+                                {% if invoice.invoice_type == 'FOLLOWUP' %}
+                                <p class="text-xs text-green-700 font-medium">{{ invoice.reference_summary }}</p>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-slate-600">
+                            <div class="space-y-1">
+                                <p class="font-medium text-slate-800">{{ invoice.service or '—' }}</p>
+                                {% if invoice.invoice_type == 'FOLLOWUP' %}
+                                <p class="text-xs text-slate-500">Doctor: {{ invoice.doctor_name or '—' }}</p>
+                                <p class="text-xs text-slate-500">Reference appointment: #{{ invoice.reference_appointment_id or 'N/A' }}</p>
+                                <p class="text-xs text-slate-500">Reference invoice: {{ invoice.reference_invoice_number or 'Not available' }}</p>
+                                {% if invoice.followup_notes %}
+                                <p class="text-xs text-slate-500">Notes: {{ invoice.followup_notes }}</p>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-right text-slate-900 font-medium">Rs. {{ "{:,.2f}".format(invoice.amount or 0) }}</td>
+                        <td class="px-4 py-3 text-right text-slate-600">Rs. {{ "{:,.2f}".format(invoice.tax or 0) }}</td>
+                        <td class="px-4 py-3 text-right font-semibold text-slate-900">Rs. {{ "{:,.2f}".format(invoice.total_amount or 0) }}</td>
+                        <td class="px-4 py-3 text-right"><span class="font-semibold text-green-600">Rs. {{ "{:,.2f}".format(invoice.paid_amount or 0) }}</span></td>
+                        <td class="px-4 py-3 text-right"><span class="font-semibold {% if invoice.balance_amount > 0 %}text-amber-600{% else %}text-green-600{% endif %}">Rs. {{ "{:,.2f}".format(invoice.balance_amount or 0) }}</span></td>
+                        <td class="px-4 py-3 text-center">
+                            {% if invoice.status == 'PAID' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">Paid</span>
+                            {% elif invoice.status == 'UNPAID' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">Unpaid</span>
+                            {% else %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-800">{{ invoice.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-slate-600 text-xs">{{ invoice.formatted_created_at or '—' }}</td>
+                        <td class="px-4 py-3 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <form method="POST" action="{{ url_for('toggle_payment_route', invoice_id=invoice.invoice_id) }}" style="display:inline;">
+                                    {% if invoice.status == 'UNPAID' %}
+                                        <button type="submit" class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium hover:bg-green-200 transition" title="Mark as Paid">Mark Paid</button>
+                                    {% else %}
+                                        <button type="submit" class="px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs font-medium hover:bg-amber-200 transition" title="Mark as Unpaid">Revert</button>
+                                    {% endif %}
+                                </form>
+                                <a href="{{ url_for('download_invoice', invoice_id=invoice.invoice_id) }}" class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium hover:bg-blue-200 transition" title="Download PDF" target="_blank" rel="noopener">Download PDF</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="13" class="px-4 py-8 text-center text-slate-500">
+                            No invoices found.
+                            {% if invoices|length == 0 and request.args.get('search') %}
+                                Try adjusting your search filters.
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if invoices|length > 0 %}
+    <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+                <p class="text-slate-600">Total Invoices</p>
+                <p class="text-lg font-bold text-slate-900">{{ invoices|length }}</p>
+            </div>
+            <div>
+                <p class="text-slate-600">Paid Invoices</p>
+                <p class="text-lg font-bold text-green-600">{{ invoices|selectattr('status', 'equalto', 'PAID')|list|length }}</p>
+            </div>
+            <div>
+                <p class="text-slate-600">Unpaid Invoices</p>
+                <p class="text-lg font-bold text-red-600">{{ invoices|selectattr('status', 'equalto', 'UNPAID')|list|length }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

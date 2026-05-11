@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Add Lead</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        /* Minimal form styling to keep it professional-looking */
+        .container { max-width: 760px; margin: 32px auto; padding: 24px; background: #fff; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
+        .form-row { display:flex; gap:12px; }
+        .form-group { margin-bottom: 12px; flex:1; }
+        label { display:block; font-weight:600; margin-bottom:6px; }
+        input[type="text"], input[type="email"], select, textarea { width:100%; padding:10px 12px; border:1px solid #dcdcdc; border-radius:6px; }
+        button { background:#2b6cb0; color:#fff; padding:10px 16px; border:none; border-radius:6px; cursor:pointer; }
+        .muted { color:#666; font-size:0.9rem }
+        .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="topbar">
+            <h2>Add New Lead</h2>
+            <a href="{{ url_for('leads') }}">Back to Leads</a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <ul class="flashes">
+              {% for category, msg in messages %}
+                <li class="muted">{{ msg }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+
+        <form method="post" action="{{ url_for('add_lead') }}">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name">Name <span class="muted">(required)</span></label>
+                    <input id="name" name="name" type="text" required maxlength="100" placeholder="Full name">
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone</label>
+                    <input id="phone" name="phone" type="text" maxlength="15" placeholder="Phone number">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input id="email" name="email" type="email" maxlength="100" placeholder="name@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="service">Service</label>
+                    <input id="service" name="service" type="text" maxlength="100" placeholder="Service / treatment of interest">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="source">Source</label>
+                    <select id="source" name="source">
+                        <option value="">-- Select Source --</option>
+                        <option value="FACEBOOK">FACEBOOK</option>
+                        <option value="GOOGLE">GOOGLE</option>
+                        <option value="INSTAGRAM">INSTAGRAM</option>
+                        <option value="WEBSITE">WEBSITE</option>
+                        <option value="REFFERAL">REFFERAL</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                        <option value="NEW">NEW</option>
+                        <option value="CONTACTED">CONTACTED</option>
+                        <option value="CONVERTED">CONVERTED</option>
+                        <option value="CLOSED">CLOSED</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <!-- ROLE-BASED ASSIGNMENT SECTION -->
+                {% if session.get('role') == 'DOCTOR' %}
+                    <!-- Doctor: Auto-assigned, read-only display -->
+                    <div class="form-group">
+                        <label>Assigned To</label>
+                        <div style="padding:10px 12px; border:1px solid #dcdcdc; border-radius:6px; background:#f5f5f5; color:#666;">
+                            ✓ Assigned to you
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Admin: Full dropdown for assignment -->
+                    <div class="form-group">
+                        <label for="assigned_to">Assigned To (Doctor)</label>
+                        <select id="assigned_to" name="assigned_to">
+                            <option value="">-- Unassigned --</option>
+                            {% for d in doctors %}
+                                <option value="{{ d.doctor_id }}">{{ d.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" name="notes" rows="3" placeholder="Short notes or lead context"></textarea>
+                </div>
+            </div>
+
+            <div style="text-align:right; margin-top:14px">
+                <button type="submit">Add Lead</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

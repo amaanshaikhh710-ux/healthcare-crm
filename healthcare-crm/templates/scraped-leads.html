@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Scraped Leads - LeadFlow{% endblock %}
+
+{% block page_title %}Scraped Leads{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-slate-900">Scraped Leads</h1>
+    <p class="text-slate-600 mt-1">Leads marked as completed or unqualified</p>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="mb-4">
+            {% for category, message in messages %}
+                <div class="p-3 rounded-lg
+                    {% if category == 'success' %}bg-green-100 text-green-800
+                    {% elif category == 'danger' %}bg-red-100 text-red-800
+                    {% else %}bg-blue-100 text-blue-800
+                    {% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<!-- Filter Section -->
+<div class="mb-6 flex gap-4">
+    <a href="{{ url_for('leads') }}" class="btn btn-secondary">← Back to Active Leads</a>
+    
+    <form method="GET" action="{{ url_for('scraped_leads') }}" class="flex gap-2 flex-1">
+        <input type="text" name="service" placeholder="Filter by service..." 
+            value="{{ service_filter }}" class="px-4 py-2 border rounded-lg flex-1" />
+        <button type="submit" class="btn btn-primary">Search</button>
+        {% if service_filter %}
+            <a href="{{ url_for('scraped_leads') }}" class="btn btn-secondary">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Scraped Leads Table -->
+<div class="mt-4 bg-white rounded-2xl shadow p-4 overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="text-slate-500 text-left border-b">
+            <tr>
+                <th class="py-3">Name</th>
+                <th class="py-3">Phone</th>
+                <th class="py-3">Email</th>
+                <th class="py-3">Service</th>
+                <th class="py-3">Source</th>
+                <th class="py-3">Date Scraped</th>
+                <th class="py-3">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if leads %}
+                {% for lead in leads %}
+                <tr class="border-b hover:bg-slate-50">
+                    <td class="py-3 font-medium">{{ lead.name }}</td>
+                    <td class="py-3">{{ lead.phone or '-' }}</td>
+                    <td class="py-3">{{ lead.email or '-' }}</td>
+                    <td class="py-3">{{ lead.service or '-' }}</td>
+                    <td class="py-3">{{ lead.source or '-' }}</td>
+                    <td class="py-3">
+                        {% if lead.created_at %}
+                            {{ lead.created_at.strftime('%Y-%m-%d') if lead.created_at is not string else lead.created_at }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="py-3">
+                        <form method="POST" action="{{ url_for('reactivate_lead', lead_id=lead.lead_id) }}">
+                            <button type="submit" class="text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded">
+                                Reactivate
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="7" class="py-6 text-center text-slate-500">
+                        No scraped leads found.
+                        {% if service_filter %}
+                            <a href="{{ url_for('scraped_leads') }}" class="text-blue-600 hover:underline">Clear filters</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-4 text-sm text-slate-600">
+    <p>Total scraped leads: <strong>{{ leads|length }}</strong></p>
+</div>
+</form>
+
+{% endblock %}

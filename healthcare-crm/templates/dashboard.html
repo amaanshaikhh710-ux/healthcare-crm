@@ -1,0 +1,756 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - LeadFlow CRM{% endblock %}
+
+{% block content %}
+<style>
+    /* Premium SaaS Dashboard Styles */
+    
+    /* Enhanced Gradients and Colors */
+    .bg-gradient-blue-purple {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .bg-gradient-teal-blue {
+        background: linear-gradient(135deg, #00d4ff 0%, #0083b0 100%);
+    }
+    
+    .bg-gradient-emerald-teal {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+    
+    .bg-gradient-rose-pink {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .bg-gradient-amber-orange {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    
+    /* Glassmorphism Cards */
+    .premium-card {
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        box-shadow: 0 8px 32px rgba(15, 23, 42, 0.1);
+        border-radius: 1.25rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .premium-card:hover {
+        box-shadow: 0 12px 48px rgba(15, 23, 42, 0.15);
+        transform: translateY(-2px);
+    }
+    
+    /* KPI Cards with Gradient */
+    .kpi-card {
+        background: linear-gradient(135deg, var(--grad-from) 0%, var(--grad-to) 100%);
+        color: white;
+        border-radius: 1.25rem;
+        padding: 1.75rem;
+        box-shadow: 0 12px 40px rgba(15, 23, 42, 0.15);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+        background-size: 20px 20px;
+        animation: float 20s infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(-10px, -10px) scale(1.05); }
+    }
+    
+    .kpi-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 50px rgba(15, 23, 42, 0.2);
+    }
+    
+    .kpi-card-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .kpi-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    }
+    
+    .kpi-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        opacity: 0.9;
+        letter-spacing: 0.5px;
+    }
+    
+    .kpi-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin: 0.75rem 0;
+        letter-spacing: -1px;
+    }
+    
+    .kpi-subtitle {
+        font-size: 0.85rem;
+        opacity: 0.85;
+    }
+    
+    /* Chart Container */
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+    
+    /* Section Headers */
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .section-header::before {
+        content: '';
+        width: 4px;
+        height: 28px;
+        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        border-radius: 2px;
+    }
+    
+    .section-header h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    
+    .section-header p {
+        font-size: 0.875rem;
+        color: #64748b;
+        margin-left: auto;
+    }
+    
+    /* Stat Cards */
+    .stat-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .stat-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #64748b;
+        letter-spacing: 0.5px;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-top: 0.75rem;
+    }
+    
+    /* Table Styles */
+    .table-card {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 1.25rem;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+    }
+    
+    .table-header {
+        padding: 1.5rem;
+        border-bottom: 2px solid rgba(148, 163, 184, 0.1);
+    }
+    
+    .table-header h3 {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    
+    .table-wrapper {
+        overflow-x: auto;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    th {
+        padding: 1rem 1.5rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: #64748b;
+        background: rgba(148, 163, 184, 0.05);
+        letter-spacing: 0.5px;
+    }
+    
+    td {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid rgba(148, 163, 184, 0.1);
+        font-size: 0.875rem;
+        color: #334155;
+    }
+    
+    tr:hover {
+        background-color: rgba(148, 163, 184, 0.05);
+        transition: background-color 0.2s ease;
+    }
+    
+    tr:last-child td {
+        border-bottom: none;
+    }
+    
+    /* Activity Feed */
+    .activity-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        border-left: 3px solid transparent;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .activity-item:hover {
+        background: rgba(148, 163, 184, 0.05);
+        border-left-color: #667eea;
+    }
+    
+    .activity-icon {
+        font-size: 1.75rem;
+        min-width: 2.5rem;
+        text-align: center;
+    }
+    
+    .activity-content h4 {
+        font-weight: 600;
+        color: #0f172a;
+        font-size: 0.9rem;
+    }
+    
+    .activity-content p {
+        color: #64748b;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+    
+    .activity-time {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        margin-top: 0.5rem;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #94a3b8;
+    }
+    
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .kpi-value { font-size: 2rem; }
+        .stat-value { font-size: 1.5rem; }
+    }
+    
+    @media (max-width: 768px) {
+        .kpi-value { font-size: 1.75rem; }
+        .stat-value { font-size: 1.25rem; }
+        .section-header h2 { font-size: 1.25rem; }
+    }
+</style>
+
+<!-- Main Dashboard Container -->
+<div class="min-h-screen">
+    
+    <!-- Page Header -->
+    <div class="mb-10">
+        <h1 class="text-4xl font-bold text-slate-900 mb-2">Welcome back!</h1>
+        <p class="text-slate-600 text-sm">Here's your clinic performance at a glance</p>
+    </div>
+
+    <!-- KPI Cards Row 1 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        
+        <!-- Total Leads -->
+        <div class="kpi-card" style="--grad-from: #667eea; --grad-to: #764ba2;">
+            <div class="kpi-card-content">
+                <div class="kpi-icon">📋</div>
+                <div class="kpi-title">TOTAL LEADS</div>
+                <div class="kpi-value">{{ kpi_data.total_leads }}</div>
+                <div class="kpi-subtitle">Active leads (excluding scraped)</div>
+            </div>
+        </div>
+
+        <!-- Conversion Rate -->
+        <div class="kpi-card" style="--grad-from: #00d4ff; --grad-to: #0083b0;">
+            <div class="kpi-card-content">
+                <div class="kpi-icon">📊</div>
+                <div class="kpi-title">CONVERSION RATE</div>
+                <div class="kpi-value">{{ kpi_data.conversion_rate }}%</div>
+                <div class="kpi-subtitle">Leads converted to patients</div>
+            </div>
+        </div>
+
+        <!-- Pending Follow-Ups -->
+        <div class="kpi-card" style="--grad-from: #f093fb; --grad-to: #f5576c;">
+            <div class="kpi-card-content">
+                <div class="kpi-icon">⏰</div>
+                <div class="kpi-title">PENDING FOLLOW-UPS</div>
+                <div class="kpi-value">{{ kpi_data.pending_followups_15d }}</div>
+                <div class="kpi-subtitle">15+ days overdue</div>
+            </div>
+        </div>
+
+        <!-- Converted Cases -->
+        <div class="kpi-card" style="--grad-from: #ff9a9e; --grad-to: #fecfef;">
+            <div class="kpi-card-content">
+                <div class="kpi-icon">📅</div>
+                <div class="kpi-title">CONVERTED CASES</div>
+                <div class="kpi-value">{{ kpi_data.converted_cases }}</div>
+                <div class="kpi-subtitle">Leads moved into treatment flow</div>
+            </div>
+        </div>
+
+        <!-- Total Revenue -->
+        <div class="kpi-card" style="--grad-from: #11998e; --grad-to: #38ef7d;">
+            <div class="kpi-card-content">
+                <div class="kpi-icon">💰</div>
+                <div class="kpi-title">REVENUE</div>
+                <div class="kpi-value">₹{{ "{:,.0f}".format(kpi_data.total_revenue) }}</div>
+                <div class="kpi-subtitle">Paid revenue this month</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+        
+        <!-- Lead Source Breakdown -->
+        <div class="premium-card p-6">
+            <div class="section-header mb-6">
+                <h3 class="text-lg font-semibold text-slate-900">Lead Sources</h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="leadSourceChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Appointment Trend -->
+        <div class="premium-card p-6">
+            <div class="section-header mb-6">
+                <h3 class="text-lg font-semibold text-slate-900">Appointment Trend</h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="conversionFunnelChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Revenue Trend -->
+        <div class="premium-card p-6">
+            <div class="section-header mb-6">
+                <h3 class="text-lg font-semibold text-slate-900">Revenue Trend</h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="revenueTrendChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Quick Stats Section -->
+    <div class="mb-10">
+        <div class="section-header mb-6">
+            <h2>Quick Stats</h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            
+            <div class="premium-card p-6 stat-card">
+                <div class="stat-label">📅 SCHEDULED</div>
+                <div class="stat-value">{{ kpi_data.scheduled_appointments }}</div>
+            </div>
+
+            <div class="premium-card p-6 stat-card">
+                <div class="stat-label">✅ COMPLETED</div>
+                <div class="stat-value">{{ kpi_data.completed_appointments }}</div>
+            </div>
+
+            <div class="premium-card p-6 stat-card">
+                <div class="stat-label">🎯 CLOSED CASES</div>
+                <div class="stat-value">{{ kpi_data.closed_cases }}</div>
+            </div>
+
+            <div class="premium-card p-6 stat-card">
+                <div class="stat-label">🔄 REPEAT PATIENTS</div>
+                <div class="stat-value">{{ kpi_data.repeat_patients }}</div>
+            </div>
+
+            <div class="premium-card p-6 stat-card">
+                <div class="stat-label">🤖 SCRAPED LEADS</div>
+                <div class="stat-value">{{ kpi_data.scraped_leads }}</div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Data Tables Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+        
+        <!-- Today's Appointments Table -->
+        <div class="table-card">
+            <div class="table-header">
+                <h3>📅 Today's Appointments</h3>
+            </div>
+            <div class="table-wrapper">
+                {% if todays_appointments_table %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Patient</th>
+                            <th>Doctor</th>
+                            <th>Service</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in todays_appointments_table %}
+                        <tr>
+                            <td>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    {{ appointment.appointment_time }}
+                                </span>
+                            </td>
+                            <td>{{ appointment.patient }}</td>
+                            <td>{{ appointment.doctor }}</td>
+                            <td>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                                    {{ appointment.service }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <p>No appointments scheduled for today</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Pending Follow-Ups Table -->
+        <div class="table-card">
+            <div class="table-header">
+                <h3>🔔 Pending Follow-Ups</h3>
+            </div>
+            <div class="table-wrapper">
+                {% if pending_followups_table %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Service</th>
+                            <th>Last Contacted</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for followup in pending_followups_table %}
+                        <tr>
+                            <td>
+                                <span class="font-medium text-slate-900">{{ followup.patient_name }}</span>
+                            </td>
+                            <td>{{ followup.service[:50] }}{{ '...' if followup.service|length > 50 else '' }}</td>
+                            <td>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                    {{ followup.last_contacted.strftime('%b %d') if followup.last_contacted else 'N/A' }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">✨</div>
+                    <p>No pending follow-ups</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Recent Activity Section -->
+    <div class="premium-card p-6">
+        <div class="section-header mb-6">
+            <h2>Recent Activity</h2>
+        </div>
+        
+        {% if recent_activity %}
+        <div class="space-y-0">
+            {% for activity in recent_activity %}
+            <div class="activity-item">
+                <div class="activity-icon">
+                    {% if activity.activity == 'Visit' %}🏥
+                    {% elif activity.activity == 'Referral' %}🔄
+                    {% elif activity.activity == 'Followup' %}📝
+                    {% elif activity.activity == 'Lead' %}👤
+                    {% else %}📌
+                    {% endif %}
+                </div>
+                <div class="activity-content flex-1">
+                    <h4>{{ activity.activity }}</h4>
+                    <p>{{ activity.description }}</p>
+                    <div class="activity-time">{{ activity.created_at.strftime('%b %d, %I:%M %p') if activity.created_at else 'N/A' }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <p>No recent activity</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- Chart.js Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    // Ensure dark mode for charts
+    Chart.defaults.color = '#64748b';
+    Chart.defaults.borderColor = 'rgba(148, 163, 184, 0.1)';
+    
+    // ==================== LEAD SOURCE PIE CHART ====================
+    const leadSourceData = {{ lead_source_json | safe }};
+    const safeLeadSourceData = leadSourceData.length ? leadSourceData : [{ source: 'No Data', count: 1 }];
+    const leadSourceCtx = document.getElementById('leadSourceChart').getContext('2d');
+    
+    const leadSourceGradient = leadSourceCtx.createLinearGradient(0, 0, 0, 300);
+    leadSourceGradient.addColorStop(0, 'rgba(102, 126, 234, 0.1)');
+    leadSourceGradient.addColorStop(1, 'rgba(102, 126, 234, 0.01)');
+    
+    new Chart(leadSourceCtx, {
+        type: 'doughnut',
+        data: {
+            labels: safeLeadSourceData.map(d => d.source),
+            datasets: [{
+                data: safeLeadSourceData.map(d => d.count),
+                backgroundColor: [
+                    '#667eea',
+                    '#764ba2',
+                    '#f093fb',
+                    '#f5576c',
+                    '#00d4ff',
+                    '#0083b0',
+                    '#11998e',
+                    '#38ef7d'
+                ],
+                borderColor: ['rgba(255, 255, 255, 0.95)'],
+                borderWidth: 3,
+                hoverBorderWidth: 4,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 16,
+                        font: { size: 12, weight: 600 },
+                        boxWidth: 12,
+                        boxHeight: 12,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        color: '#334155'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    padding: 12,
+                    titleFont: { size: 13, weight: 600 },
+                    bodyFont: { size: 12 },
+                    borderColor: 'rgba(148, 163, 184, 0.2)',
+                    borderWidth: 1,
+                    displayColors: true,
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(ctx) {
+                            const total = ctx.dataset.data.reduce((sum, n) => sum + n, 0);
+                            const value = ctx.parsed;
+                            const pct = total ? ((value / total) * 100).toFixed(1) : 0;
+                            return ` ${value} leads (${pct}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // ==================== APPOINTMENT TREND CHART ====================
+    const conversionFunnelData = {{ conversion_funnel_json | safe }};
+    const conversionFunnelCtx = document.getElementById('conversionFunnelChart').getContext('2d');
+    const safeAppointmentTrendData = conversionFunnelData.length ? conversionFunnelData : [{ month: 'N/A', count: 0 }];
+    
+    new Chart(conversionFunnelCtx, {
+        type: 'bar',
+        data: {
+            labels: safeAppointmentTrendData.map(d => {
+                if (!d.month || d.month === 'N/A') return 'N/A';
+                const [year, month] = d.month.split('-');
+                const date = new Date(year, parseInt(month) - 1);
+                return date.toLocaleDateString('en-US', { month: 'short' });
+            }),
+            datasets: [{
+                label: 'Appointments',
+                data: safeAppointmentTrendData.map(d => d.count),
+                backgroundColor: [
+                    '#667eea',
+                    '#764ba2',
+                    '#f093fb',
+                    '#00d4ff'
+                ],
+                borderRadius: 8,
+                borderSkipped: false,
+                hoverBackgroundColor: ['#5568d3', '#6a3d91', '#db7fe8', '#00b8cc']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    padding: 12,
+                    titleFont: { size: 13, weight: 600 },
+                    bodyFont: { size: 12 },
+                    borderColor: 'rgba(148, 163, 184, 0.2)',
+                    borderWidth: 1,
+                    cornerRadius: 8
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: { color: '#64748b', font: { size: 11 } },
+                    grid: { color: 'rgba(148, 163, 184, 0.1)', drawBorder: false }
+                },
+                y: {
+                    ticks: { color: '#334155', font: { size: 12, weight: 600 } },
+                    grid: { display: false, drawBorder: false }
+                }
+            }
+        }
+    });
+    
+    // ==================== REVENUE TREND LINE CHART ====================
+    const revenueTrendData = {{ revenue_trend_json | safe }};
+    const safeRevenueTrendData = revenueTrendData.length ? revenueTrendData : [{ month: 'N/A', revenue: 0 }];
+    const revenueTrendCtx = document.getElementById('revenueTrendChart').getContext('2d');
+    
+    const gradient = revenueTrendCtx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(17, 153, 142, 0.3)');
+    gradient.addColorStop(1, 'rgba(56, 239, 125, 0.01)');
+    
+    new Chart(revenueTrendCtx, {
+        type: 'line',
+        data: {
+            labels: safeRevenueTrendData.map(d => {
+                if (!d.month || d.month === 'N/A') return 'N/A';
+                const [year, month] = d.month.split('-');
+                const date = new Date(year, parseInt(month) - 1);
+                return date.toLocaleDateString('en-US', { month: 'short' });
+            }),
+            datasets: [{
+                label: 'Revenue',
+                data: safeRevenueTrendData.map(d => d.revenue),
+                borderColor: '#11998e',
+                borderWidth: 3,
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+                pointBackgroundColor: '#11998e',
+                pointBorderColor: 'white',
+                pointBorderWidth: 2,
+                pointHoverRadius: 7,
+                pointHoverBackgroundColor: '#38ef7d',
+                hoverBorderColor: '#38ef7d',
+                hoverBorderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    padding: 12,
+                    titleFont: { size: 13, weight: 600 },
+                    bodyFont: { size: 12 },
+                    borderColor: 'rgba(148, 163, 184, 0.2)',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(ctx) {
+                            return '₹' + ctx.parsed.y.toLocaleString('en-IN');
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#64748b', font: { size: 11 } },
+                    grid: { color: 'rgba(148, 163, 184, 0.1)', drawBorder: false }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#64748b',
+                        font: { size: 11 },
+                        callback: function(value) {
+                            return '₹' + (value / 1000).toFixed(0) + 'k';
+                        }
+                    },
+                    grid: { color: 'rgba(148, 163, 184, 0.1)', drawBorder: false }
+                }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

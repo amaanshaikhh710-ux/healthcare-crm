@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Campaigns - LeadFlow{% endblock %}
+
+{% block page_title %}Campaigns{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="text-2xl font-bold">Campaigns</h2>
+    <p class="text-sm text-slate-500">Marketing campaigns, scraped-lead re-engagement and campaign logs</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+    <div class="bg-white rounded-lg shadow p-4">
+        <h3 class="text-lg font-semibold mb-3">Start New Campaign</h3>
+        <form method="POST" action="{{ url_for('create_campaign') }}" class="space-y-3">
+            <input name="name" placeholder="Campaign name" class="w-full px-3 py-2 border rounded" required />
+            <input name="service_filter" placeholder="Service filter (optional)" class="w-full px-3 py-2 border rounded" />
+            <textarea name="message" rows="4" placeholder="Enter campaign message" class="w-full px-3 py-2 border rounded" required></textarea>
+            <button type="submit" class="btn btn-primary">Create Campaign</button>
+        </form>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+        <h3 class="text-lg font-semibold mb-3">Campaign Summary</h3>
+        <p class="text-sm text-slate-500">Existing campaigns are listed below. Use Run to re-engage scraped leads by service.</p>
+        <div class="mt-4">
+            <div class="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                <div>Total campaigns: {{ campaigns|length }}</div>
+                <div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bg-white rounded-lg shadow p-4 overflow-x-auto">
+    <table class="w-full text-sm">
+        <thead class="border-b text-slate-700">
+            <tr>
+                <th class="px-3 py-2 text-left">Campaign</th>
+                <th class="px-3 py-2 text-left">Service</th>
+                <th class="px-3 py-2 text-center">Status</th>
+                <th class="px-3 py-2 text-center">Sent</th>
+                <th class="px-3 py-2 text-center">Success</th>
+                <th class="px-3 py-2 text-center">Failed</th>
+                <th class="px-3 py-2 text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in campaigns %}
+            <tr class="border-b hover:bg-slate-50">
+                <td class="px-3 py-2">{{ c.name }}</td>
+                <td class="px-3 py-2">{{ c.service_filter or 'All' }}</td>
+                <td class="px-3 py-2 text-center">{{ c.status }}</td>
+                <td class="px-3 py-2 text-center">{{ c.total_sent or 0 }}</td>
+                <td class="px-3 py-2 text-center">{{ c.sent_success or 0 }}</td>
+                <td class="px-3 py-2 text-center">{{ c.sent_failed or 0 }}</td>
+                <td class="px-3 py-2 text-center">
+                    <form method="POST" action="{{ url_for('run_campaign', campaign_id=c.campaign_id) }}" class="inline">
+                        <button type="submit" class="btn btn-secondary btn-sm">Run</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="px-3 py-5 text-center text-slate-500">No campaigns found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

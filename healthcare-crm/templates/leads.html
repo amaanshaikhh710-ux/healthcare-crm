@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Leads - LeadFlow{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-slate-900">Leads Management</h1>
+    <p class="text-slate-600 mt-1">Track and convert leads to customers</p>
+</div>
+
+<div class="flex flex-col md:flex-row md:items-end gap-4 mb-6">
+    <form method="GET" action="{{ url_for('leads') }}" class="flex flex-1 flex-wrap gap-2">
+        <input
+            name="q"
+            type="text"
+            placeholder="Search leads by name, phone, service..."
+            value="{{ search_query or '' }}"
+            class="px-4 py-2 border rounded-lg flex-1 min-w-[200px]"
+        />
+        <select name="service" class="px-4 py-2 border rounded-lg min-w-[200px]">
+            <option value="">All services</option>
+            <option value="Acne Treatment" {% if service_filter == 'Acne Treatment' %}selected{% endif %}>Acne Treatment</option>
+            <option value="Hair Fall Control" {% if service_filter == 'Hair Fall Control' %}selected{% endif %}>Hair Fall Control</option>
+            <option value="Anti-Aging" {% if service_filter == 'Anti-Aging' %}selected{% endif %}>Anti-Aging</option>
+            <option value="Eczema Treatment" {% if service_filter == 'Eczema Treatment' %}selected{% endif %}>Eczema Treatment</option>
+            <option value="Psoriasis" {% if service_filter == 'Psoriasis' %}selected{% endif %}>Psoriasis</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Filter</button>
+        {% if search_query or service_filter %}
+            <a href="{{ url_for('leads') }}" class="btn btn-secondary">Clear</a>
+        {% endif %}
+    </form>
+
+    <div class="flex gap-2">
+        <a href="{{ url_for('add_lead') }}" class="btn btn-primary">+ Add Lead</a>
+        <a href="{{ url_for('scraped_leads') }}" class="btn btn-secondary">📋 Scraped Leads</a>
+    </div>
+</div>
+
+<div class="bg-white rounded-2xl shadow p-4 overflow-x-auto">
+    <table class="w-full text-sm">
+        <thead class="text-slate-500 text-left border-b">
+            <tr>
+                <th class="py-3">Name</th>
+                <th class="py-3">Phone</th>
+                <th class="py-3">Service</th>
+                <th class="py-3">Source</th>
+                <th class="py-3">Doctor</th>
+                <th class="py-3">Status</th>
+                <th class="py-3">Last Contacted</th>
+                <th class="py-3">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if leads %}
+                {% for lead in leads %}
+                <tr class="border-b hover:bg-slate-50">
+                    <td class="py-3 font-medium">{{ lead.name }}</td>
+                    <td class="py-3">{{ lead.phone or '-' }}</td>
+                    <td class="py-3">{{ lead.service or '-' }}</td>
+                    <td class="py-3">{{ lead.source or '-' }}</td>
+                    <td class="py-3">{{ lead.doctor_name or 'Unassigned' }}</td>
+                    <td class="py-3">
+                        <span class="px-2 py-1 rounded text-xs font-semibold
+                            {% if lead.status == 'NEW' %}bg-blue-100 text-blue-800
+                            {% elif lead.status == 'CONTACTED' %}bg-yellow-100 text-yellow-800
+                            {% elif lead.status == 'CONVERTED' %}bg-green-100 text-green-800
+                            {% elif lead.status == 'CLOSED' %}bg-red-100 text-red-800
+                            {% else %}bg-gray-100 text-gray-800
+                            {% endif %}">
+                            {{ lead.status }}
+                        </span>
+                    </td>
+                    <td class="py-3">
+                        <div>{{ lead.last_contacted or '-' }}</div>
+                        {% if lead.followup_label %}
+                            <div class="mt-1">
+                                <span class="px-2 py-1 rounded text-[11px] font-semibold {{ lead.followup_badge_class or 'bg-slate-100 text-slate-700' }}">{{ lead.followup_label }}</span>
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td class="py-3 flex flex-wrap gap-2">
+                        {% if session.get('role') in ['DOCTOR', 'ADMIN'] %}
+                            {% if lead.status != 'CONTACTED' %}
+                                <form method="POST" action="{{ url_for('mark_contacted', lead_id=lead.lead_id) }}" style="display:inline;">
+                                    <button type="submit" class="text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded">
+                                        Contacted
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                            {% if lead.status not in ['CONVERTED', 'SCRAPED'] %}
+                                <form method="POST" action="{{ url_for('mark_converted', lead_id=lead.lead_id) }}" style="display:inline;">
+                                    <button type="submit" class="text-xs bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded">
+                                        Converted
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                            <form method="POST" action="{{ url_for('update_last_contacted', lead_id=lead.lead_id) }}" style="display:inline;">
+                                <button type="submit" class="text-xs bg-indigo-500 hover:bg-indigo-600 text-white px-2 py-1 rounded">
+                                    Update Contacted
+                                </button>
+                            </form>
+
+                            <form method="POST" action="{{ url_for('scrape_lead', lead_id=lead.lead_id) }}" style="display:inline;">
+                                <button type="submit" class="text-xs bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded" 
+                                    onclick="return confirm('Mark this lead as scraped?')">Scrape</button>
+                            </form>
+                        {% endif %}
+
+                        {% if lead.status == 'CONVERTED' %}
+                            {% if lead.appointment_count and lead.appointment_count > 0 %}
+                                <span class="text-xs bg-gray-300 text-gray-700 px-2 py-1 rounded">Appointment Created</span>
+                            {% else %}
+                                <a href="{{ url_for('convert_to_appointment', lead_id=lead.lead_id) }}" 
+                                   class="text-xs bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 rounded">
+                                    📅 Schedule Appointment
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="8" class="py-6 text-center text-slate-500">
+                        No active leads found. <a href="{{ url_for('add_lead') }}" class="text-blue-600 hover:underline">Add a new lead</a>
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Add Visit - LeadFlow{% endblock %}
+{% block page_title %}Add Visit{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-slate-900">Record New Visit</h1>
+        <p class="text-slate-600 mt-2">Log a patient visit with diagnosis and follow-up</p>
+    </div>
+
+    <!-- Form Container -->
+    <div class="bg-white rounded-2xl shadow-lg p-8 max-w-2xl">
+        <form method="POST" action="{{ url_for('add_visit') }}" class="space-y-6">
+            <!-- Patient -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Patient</label>
+                <select name="patient_id" required
+                    class="w-full px-4 py-3 border border-slate-300 rounded-xl 
+                    focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                    <option value="">Select patient</option>
+                    {% for p in patients %}
+                    <option value="{{ p.patient_id }}">{{ p.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Doctor -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Doctor</label>
+                <select name="doctor_id" required
+                    class="w-full px-4 py-3 border border-slate-300 rounded-xl 
+                    focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                    <option value="">Select doctor</option>
+                    {% for d in doctors %}
+                    <option value="{{ d.doctor_id }}">{{ d.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Visit Date -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Visit Date</label>
+                <input type="date" name="visit_date" required
+                    class="w-full px-4 py-3 border border-slate-300 rounded-xl 
+                    focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+            </div>
+
+            <!-- Diagnosis -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Diagnosis / Notes</label>
+                <textarea name="diagnosis" rows="3"
+                    class="w-full px-4 py-3 border border-slate-300 rounded-xl 
+                    focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"></textarea>
+            </div>
+
+            <!-- Status & Follow-up -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Status</label>
+                    <select name="status" class="w-full px-4 py-3 border border-slate-300 rounded-xl 
+                        focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                        <option value="OPEN" selected>OPEN</option>
+                        <option value="RESOLVED">RESOLVED</option>
+                        <option value="REFERRED">REFERRED</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Follow-up Date</label>
+                    <input type="date" name="follow_up_date"
+                        class="w-full px-4 py-3 border border-slate-300 rounded-xl 
+                        focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex gap-4 pt-6">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 
+                    rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg">
+                    Create Visit
+                </button>
+                <a href="{{ url_for('visits') }}" class="bg-slate-100 hover:bg-slate-200 text-slate-900 px-8 py-3 
+                    rounded-xl font-semibold transition-all duration-200 inline-block">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
