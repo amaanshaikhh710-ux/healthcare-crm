@@ -7,6 +7,7 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, s
 import os
 from functools import wraps
 import psycopg2
+import psycopg2.extras
 from psycopg2 import Error, IntegrityError
 import io
 import json
@@ -62,7 +63,7 @@ def login():
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
         user = cursor.fetchone()
@@ -156,7 +157,7 @@ def get_db_connection():
         raise
         
 conn = get_db_connection()
-cursor = conn.cursor()
+cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
@@ -185,7 +186,7 @@ def get_user_doctor_id(user_email):
     cursor = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute("SELECT doctor_id FROM users WHERE email = %s LIMIT 1", (user_email,))
         row = cursor.fetchone()
         return row['doctor_id'] if row and row.get('doctor_id') else None
@@ -216,7 +217,7 @@ def table_columns(table_name, cursor=None, refresh=False):
     try:
         if cursor is None:
             own_conn = get_db_connection()
-            own_cursor = own_conn.cursor()
+            own_cursor = own_conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             cursor = own_cursor
         cursor.execute(f"SHOW COLUMNS FROM {table_name}")
         cols = {row['Field'] for row in cursor.fetchall()}
@@ -1024,7 +1025,7 @@ def dashboard():
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         # ROLE-BASED SCOPE
         if role == "DOCTOR":
@@ -1368,7 +1369,7 @@ def follow_up_analytics():
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         cursor.execute("SELECT COUNT(*) AS cnt FROM followups")
         stats['total'] = cursor.fetchone().get('cnt', 0) or 0
@@ -1416,7 +1417,7 @@ def follow_up_analytics():
 def test_db():
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute("SHOW TABLES")
         tables = cursor.fetchall()
         conn.close()
@@ -1444,7 +1445,7 @@ def leads():
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         ensure_patients_schema(cursor, conn)
         
         # Get user role from session
@@ -1558,7 +1559,7 @@ def add_lead():
             cursor = None
             try:
                 conn = get_db_connection()
-                cursor = conn.cursor()
+                cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
                 cursor.execute("SELECT doctor_id, name FROM doctors ORDER BY name")
                 doctors = cursor.fetchall()
             except Exception as e:
@@ -1605,7 +1606,7 @@ def add_lead():
 
         try:
             conn = get_db_connection()
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
             # ===== SECURE ROLE-BASED ASSIGNMENT LOGIC =====
             if user_role == 'DOCTOR':
@@ -1702,7 +1703,7 @@ def scrape_lead(lead_id):
     
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
         # Fetch current lead details
         cursor.execute("SELECT lead_id, assigned_to FROM leads WHERE lead_id = %s", (lead_id,))
@@ -1773,7 +1774,7 @@ def mark_contacted(lead_id):
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         ensure_patients_schema(cursor, conn)
 
         cursor.execute("SELECT lead_id, assigned_to FROM leads WHERE lead_id = %s", (lead_id,))
@@ -1836,7 +1837,7 @@ def mark_converted(lead_id):
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         cursor.execute("SELECT lead_id, assigned_to FROM leads WHERE lead_id = %s", (lead_id,))
         lead = cursor.fetchone()
@@ -1920,7 +1921,7 @@ def update_last_contacted(lead_id):
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         cursor.execute("SELECT lead_id, assigned_to FROM leads WHERE lead_id = %s", (lead_id,))
         lead = cursor.fetchone()
@@ -1982,7 +1983,7 @@ def reactivate_lead(lead_id):
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         cursor.execute("SELECT lead_id, assigned_to FROM leads WHERE lead_id = %s", (lead_id,))
         lead = cursor.fetchone()
@@ -2054,7 +2055,7 @@ def scraped_leads():
     
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
         # Query for scraped leads
         query = (
@@ -2120,7 +2121,7 @@ def generate_leads():
     cursor = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         # Fetch doctor ids for assignment
         cursor.execute("SELECT doctor_id FROM doctors")
@@ -2188,7 +2189,7 @@ def patients():
     }
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         ensure_patients_schema(cursor, conn)
         active_filter = get_active_patient_filter(cursor, patient_alias='p')
 
@@ -2276,7 +2277,7 @@ def add_patient():
 
         try:
             conn = get_db_connection()
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             ensure_patients_schema(cursor, conn)
             if user_role == 'ADMIN':
                 cursor.execute("SELECT doctor_id, name FROM doctors WHERE status = 'ACTIVE' ORDER BY name")
@@ -2325,7 +2326,7 @@ def add_patient():
 
         try:
             conn = get_db_connection()
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             ensure_patients_schema(cursor, conn)
             print('[DEBUG] add_patient: database connection established')
             app.logger.info('add_patient: database connection established')
@@ -2457,7 +2458,7 @@ def toggle_case(patient_id):
     
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
         # Fetch current case status
         query = "SELECT patient_id, case_status, name FROM patients WHERE patient_id = %s"
@@ -2551,7 +2552,7 @@ def doctors():
     
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
         # Base query - select all required fields and filter by ACTIVE status
         base_query = """
@@ -2667,7 +2668,7 @@ def add_doctor():
 
         try:
             conn = get_db_connection()
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             print('[DEBUG] add_doctor: database transaction started')
             app.logger.info('add_doctor: database transaction started')
 
@@ -2788,7 +2789,7 @@ def convert_to_appointment(lead_id):
         cursor = None
         try:
             conn = get_db_connection()
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             ensure_patients_schema(cursor, conn)
 
             cursor.execute(
@@ -2874,7 +2875,7 @@ def convert_to_appointment(lead_id):
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         ensure_patients_schema(cursor, conn)
 
         cursor.execute(
@@ -3066,7 +3067,7 @@ def appointments():
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         ensure_patients_schema(cursor, conn)
         
         # Use LEFT JOINs to include ALL appointments even if patient/doctor not yet linked
@@ -3156,7 +3157,7 @@ def update_appointment_status(appointment_id, new_status):
     
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
         # Fetch appointment details
         cursor.execute(
@@ -3257,7 +3258,7 @@ def generate_invoice(appointment_id):
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         invoice_has_type = has_column('invoices', 'invoice_type', cursor)
         invoice_has_followup_id = has_column('invoices', 'followup_id', cursor)
 
@@ -3428,7 +3429,7 @@ def visits():
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         query = (
             "SELECT v.visit_id, p.name AS patient_name, d.name AS doctor_name, "
@@ -3475,7 +3476,7 @@ def add_visit():
         cursor = None
         try:
             conn = get_db_connection()
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             ensure_patients_schema(cursor, conn)
             active_filter = get_active_patient_filter(cursor, patient_alias='patients')
             patient_query = f"SELECT patient_id, name FROM patients WHERE {active_filter}"
@@ -3520,7 +3521,7 @@ def add_visit():
     cursor = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         ensure_patients_schema(cursor, conn)
 
         patient_query = "SELECT patient_id FROM patients WHERE patient_id = %s"
@@ -3573,7 +3574,7 @@ def update_visit_status(visit_id, new_status):
     cursor = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute(
             "SELECT v.visit_id, v.status, d.email AS doctor_email "
             "FROM visits v JOIN doctors d ON v.doctor_id = d.doctor_id "
@@ -3635,7 +3636,7 @@ def followups():
     
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         followup_cfg = get_followups_config(cursor)
         doctor_id = get_user_doctor_id(user_email) if user_role == 'DOCTOR' else None
         
@@ -3833,7 +3834,7 @@ def add_followup(appointment_id):
     
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         followup_cfg = get_followups_config(cursor)
         
         # Fetch appointment details with patient info
@@ -3959,7 +3960,7 @@ def complete_followup(followup_id):
     
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         followup_cfg = get_followups_config(cursor)
         
         # Fetch follow-up and verify ownership
@@ -4040,7 +4041,7 @@ def toggle_followup(followup_id):
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         followup_cfg = get_followups_config(cursor)
 
         cursor.execute(
@@ -4147,7 +4148,7 @@ def add_next_followup(followup_id):
     
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         followup_cfg = get_followups_config(cursor)
         
         # Fetch current follow-up details
@@ -4294,7 +4295,7 @@ def reschedule_followup(followup_id):
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         followup_cfg = get_followups_config(cursor)
 
         patient_join = (
@@ -4400,7 +4401,7 @@ def generate_followup_invoice(followup_id):
     
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         print(f"[DEBUG] Route hit: /generate-followup-invoice/{followup_id}")
         app.logger.info('Route hit: /generate-followup-invoice/%s', followup_id)
         followup_cfg = get_followups_config(cursor)
@@ -4570,7 +4571,7 @@ def invoices():
     
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         ensure_followup_invoice_schema(cursor, conn)
         invoice_type_select = "i.invoice_type," if has_column('invoices', 'invoice_type', cursor) else "'APPOINTMENT' AS invoice_type,"
         followup_id_select = "i.followup_id," if has_column('invoices', 'followup_id', cursor) else "NULL AS followup_id,"
@@ -4845,7 +4846,7 @@ def campaigns():
     try:
         print("Campaign route hit")
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute(
             "SELECT c.*, COUNT(cl.log_id) AS total_sent, "
             "SUM(cl.status = 'SENT') AS sent_success, "
@@ -4885,7 +4886,7 @@ def create_campaign():
     cursor = None
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute(
             "INSERT INTO campaigns (name, service_filter, message, status, created_by, created_at) "
             "VALUES (%s, %s, %s, 'DRAFT', (SELECT user_id FROM users WHERE email = %s), NOW())",
@@ -4916,7 +4917,7 @@ def run_campaign(campaign_id):
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         cursor.execute("SELECT campaign_id, service_filter, message FROM campaigns WHERE campaign_id = %s AND is_active = TRUE", (campaign_id,))
         campaign = cursor.fetchone()
@@ -4983,7 +4984,7 @@ def closed_cases():
     
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         ensure_patients_schema(cursor, conn)
         
         # Base query for closed patients
@@ -5045,7 +5046,7 @@ def get_leads():
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         ensure_patients_schema(cursor, conn)
         cursor.execute(query, tuple(params))
         rows = cursor.fetchall() or []
@@ -5080,7 +5081,7 @@ def get_patients():
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         ensure_patients_schema(cursor, conn)
         query = "SELECT p.* FROM patients p WHERE 1 = 1"
         params = []
@@ -5113,7 +5114,7 @@ def get_doctors():
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         if user_role == 'DOCTOR':
             doctor_id = get_session_doctor_id()
@@ -5164,7 +5165,7 @@ def get_appointments():
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         ensure_patients_schema(cursor, conn)
         cursor.execute(q, tuple(params))
         rows = cursor.fetchall() or []
