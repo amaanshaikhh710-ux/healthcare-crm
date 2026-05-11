@@ -167,8 +167,8 @@ CREATE TABLE IF NOT EXISTS users (
 )
 """)
 cursor.execute("""
-INSERT INTO users (email, password)
-VALUES ('admin@gmail.com', 'Amaan@123')
+INSERT INTO users (name,email, password)
+VALUES ('Admin','admin@gmail.com', 'Amaan@123')
 ON CONFLICT (email) DO NOTHING
 """)
 
