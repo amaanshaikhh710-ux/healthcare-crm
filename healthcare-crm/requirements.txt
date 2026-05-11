@@ -3,3 +3,4 @@ python-dotenv>=0.21
 Jinja2>=3.0
 mysql-connector-python>=9.0
 reportlab>=4.0
+psycopg2-binary
