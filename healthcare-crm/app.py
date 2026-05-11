@@ -165,6 +165,11 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL
 )
 """)
+cursor.execute("""
+INSERT INTO users (email, password)
+VALUES ('admin@gmail.com', 'Amaan@123')
+ON CONFLICT (email) DO NOTHING
+""")
 
 conn.commit()
 cursor.close()
