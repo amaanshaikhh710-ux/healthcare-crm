@@ -172,6 +172,10 @@ ADD COLUMN IF NOT EXISTS name VARCHAR(255)
 """)
 cursor.execute("""
 ALTER TABLE users
+ADD COLUMN IF NOT EXISTS role VARCHAR(50)
+""")
+cursor.execute("""
+ALTER TABLE users
 ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE
 """)
 
@@ -179,6 +183,7 @@ cursor.execute("""
 ALTER TABLE users
 ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 """)
+
     
 cursor.execute("""
 INSERT INTO users (name,email, password,role,is_admin)
