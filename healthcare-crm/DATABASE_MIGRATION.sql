@@ -124,6 +124,11 @@ CREATE TABLE IF NOT EXISTS campaign_logs (
     CONSTRAINT fk_campaign_logs_campaign FOREIGN KEY (campaign_id) REFERENCES campaigns(campaign_id) ON DELETE CASCADE,
     CONSTRAINT fk_campaign_logs_lead FOREIGN KEY (lead_id) REFERENCES leads(lead_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS users (
+    doctor_id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL
+);
 
 -- ============================================================================
 -- END OF MIGRATION SCRIPT
