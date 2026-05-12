@@ -4069,10 +4069,8 @@ def generate_followup_invoice(followup_id):
 
 # ============= INVOICES =============
 
-@a
 
-
-pp.route('/invoices')
+@pp.route('/invoices')
 @login_required
 def invoices():
     invoices_list = []
