@@ -4698,7 +4698,52 @@ def get_appointments():
             cursor.close()
         if conn:
             conn.close()
+@app.route('/toggle-case/<int:patient_id>', methods=['POST'])
+@login_required
+def toggle_case(patient_id):
+    conn = None
+    cursor = None
 
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        cursor.execute(
+            "SELECT case_status FROM patients WHERE patient_id = %s",
+            (patient_id,)
+        )
+
+        patient = cursor.fetchone()
+
+        if not patient:
+            flash('Patient not found', 'danger')
+            return redirect(url_for('patients'))
+
+        current = patient.get('case_status', 'ACTIVE')
+        new_status = 'CLOSED' if current == 'ACTIVE' else 'ACTIVE'
+
+        cursor.execute(
+            "UPDATE patients SET case_status = %s WHERE patient_id = %s",
+            (new_status, patient_id)
+        )
+
+        conn.commit()
+        flash(f'Case marked as {new_status}', 'success')
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+
+        flash(str(e), 'danger')
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+    return redirect(request.referrer or url_for('patients'))
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
