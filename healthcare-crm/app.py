@@ -4238,6 +4238,7 @@ def invoices():
         'invoices.html',
         invoices=invoices_list,
         revenue_data=revenue_data,
+        revenue_summary=revenue_data,
         search_query=search_query,
         status_filter=status_filter,
         invoice_type_filter=invoice_type_filter,
