@@ -177,14 +177,14 @@
                         <td class="px-4 py-3 text-slate-600 text-xs">{{ invoice.formatted_created_at or '—' }}</td>
                         <td class="px-4 py-3 text-center">
                             <div class="flex items-center justify-center gap-2">
-                                <form method="POST" action="{{ url_for('toggle_payment_route', invoice_id=invoice.invoice_id) }}" style="display:inline;">
+                                <form method="POST" action="{{ url_for('toggle_payment', invoice_id=invoice.invoice_id) }}" style="display:inline;">
                                     {% if invoice.status == 'UNPAID' %}
                                         <button type="submit" class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium hover:bg-green-200 transition" title="Mark as Paid">Mark Paid</button>
                                     {% else %}
                                         <button type="submit" class="px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs font-medium hover:bg-amber-200 transition" title="Mark as Unpaid">Revert</button>
                                     {% endif %}
                                 </form>
-                                <a href="{{ url_for('download_invoice', invoice_id=invoice.invoice_id) }}" class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium hover:bg-blue-200 transition" title="Download PDF" target="_blank" rel="noopener">Download PDF</a>
+                                <a href="{{ url_for('invoice_pdf', invoice_id=invoice.invoice_id) }}" class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium hover:bg-blue-200 transition" title="Download PDF" target="_blank" rel="noopener">Download PDF</a>
                             </div>
                         </td>
                     </tr>
